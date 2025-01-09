@@ -7,6 +7,7 @@ LIB_DIR = lib
 BUILD_DIR = build
 TEST_DIR = tests
 INSTALL_DIR = /usr/local
+RESOURCES_DIR = resources
 
 # Build type (Debug/Release)
 BUILD_TYPE ?= Debug
@@ -47,8 +48,14 @@ $(BUILD_DIR)/%.o: %.cpp
 # uninstall:
 #     rm -f $(INSTALL_DIR)/bin/program
 
+copy-resources:
+	@echo "Copying resources folders from src to build directory..."
+	@mkdir -p $(BUILD_DIR)/$(RESOURCES_DIR)
+	@cp $(wildcard $(SRC_DIR)/**/$(RESOURCES_DIR)/*) $(BUILD_DIR)/$(RESOURCES_DIR)/
+
 run: $(BUILD_DIR)/program
-	./$(BUILD_DIR)/program
+	@echo "Don't forget to copy resources folder to build directory using make copy-resources"
+	cd $(BUILD_DIR) && ./program
 
 format:
 	clang-format -i ./**/*.cpp
