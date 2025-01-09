@@ -1,12 +1,29 @@
 CXX = clang++
-CXXFLAGS = -std=c++20 -Wall -Wextra -Werror -fsanitize=address,undefined
-INCLUDES = -Isrc/lib
+VERSION = 0.1.0
 
-SRC_DIR = ./src
-BUILD_DIR = ./build
-TEST_DIR = ./tests
+SRC_DIR = src
+INCLUDE_DIR = include
+LIB_DIR = lib
+BUILD_DIR = build
+TEST_DIR = tests
+INSTALL_DIR = /usr/local
 
-SRCS = $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/lib/*.cpp)
+# Build type (Debug/Release)
+BUILD_TYPE ?= Debug
+ifeq ($(BUILD_TYPE),Debug)
+    CXXFLAGS = -std=c++20 -g -Wall -Wextra -Werror -fsanitize=address,undefined
+else
+    CXXFLAGS = -std=c++20 -O3 -DNDEBUG
+endif
+
+# External dependencies
+LDFLAGS = -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl
+
+INCLUDES = -I$(INCLUDE_DIR) -I$(LIB_DIR)
+
+SRCS = $(wildcard $(SRC_DIR)/*.cpp) \
+       $(wildcard $(SRC_DIR)/**/*.cpp) \
+       $(wildcard $(LIB_DIR)/*.cpp)
 OBJS = $(SRCS:%.cpp=$(BUILD_DIR)/%.o)
 
 .PHONY: all clean test format lint run help earth dry-run earth-run
@@ -15,11 +32,20 @@ all: $(BUILD_DIR)/program
 
 $(BUILD_DIR)/program: $(OBJS)
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) $^ -o $@
+	$(CXX) $(OBJS) $(CXXFLAGS) $(LDFLAGS) -o $@
 
 $(BUILD_DIR)/%.o: %.cpp
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+# Install and uninstall targets
+
+# install: all
+#     install -d $(INSTALL_DIR)/bin
+#     install -m 755 $(BUILD_DIR)/program $(INSTALL_DIR)/bin
+
+# uninstall:
+#     rm -f $(INSTALL_DIR)/bin/program
 
 run: $(BUILD_DIR)/program
 	./$(BUILD_DIR)/program
